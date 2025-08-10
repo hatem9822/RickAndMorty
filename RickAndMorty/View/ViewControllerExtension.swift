@@ -28,7 +28,12 @@ extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let character = characters[indexPath.row]
-        print("Selected: \(character.name)")
+        
+        // Create detail view controller (you'll need to create this)
+        let detailVC = CharacterDetailViewController(character: character)
+        UIView.performWithoutAnimation {
+            navigationController?.pushViewController(detailVC, animated: false)
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

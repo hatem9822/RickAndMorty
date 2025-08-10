@@ -7,6 +7,9 @@
 
 import Foundation
 
+protocol CharactersAPI {
+    func fetchCharacters(completion: @escaping (Result<[Character], Error>) -> Void)
+  }
 class NetworkService {
     
     func fetchData(from url: URL,list: [Character],iteration: Int, completion: @escaping (Result<[Character], Error>) -> Void) {

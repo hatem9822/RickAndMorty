@@ -13,16 +13,49 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
-        let viewController = ViewController()
-        window?.rootViewController = UINavigationController(rootViewController: viewController)
+        
+        let viewModel = RickAndMortyViewModel(onStateChange: nil)
+        let viewController = ViewController(viewModel: viewModel)
+        let navigationController = UINavigationController(rootViewController: viewController)
+        navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), selectedImage: UIImage(systemName: "house.fill"))
+        
+        let favouriteVC = FavouriteViewController(viewModel: viewModel)
+        let favouriteNavController = UINavigationController(rootViewController: favouriteVC)
+        favouriteNavController.tabBarItem = UITabBarItem(title: "Favourite", image: UIImage(systemName: "heart"), selectedImage: UIImage(systemName: "heart.fill"))
+
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [navigationController, favouriteNavController]
+
+        // Make the tab bar opaque so it doesn't overlay scroll views
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+        tabBarController.tabBar.standardAppearance = tabBarAppearance
+        tabBarController.tabBar.scrollEdgeAppearance = tabBarAppearance
+        tabBarController.tabBar.isTranslucent = false
+
+        // Apply consistent dark, opaque navigation bar to avoid white flash on transitions
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+        navAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+
+        [navigationController, favouriteNavController].forEach { nav in
+            nav.navigationBar.standardAppearance = navAppearance
+            nav.navigationBar.scrollEdgeAppearance = navAppearance
+            nav.navigationBar.compactAppearance = navAppearance
+            nav.navigationBar.isTranslucent = false
+            nav.view.backgroundColor = .black
+        }
+
+
+        window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
     }
-
+    
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
