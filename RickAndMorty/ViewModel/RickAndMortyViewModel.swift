@@ -6,13 +6,14 @@ protocol RickAndMortyViewModelProtocol:AnyObject {
       func getFavouriteCharacters() -> [Character]
       var onStateChange: ((RickAndMortyViewModel.CharactersState) -> Void)? { get set }
       func toggleFavourite(_ characterID: Int32)
+      var characters: [Character] { get }
   }
 
 class RickAndMortyViewModel: RickAndMortyViewModelProtocol {
     private let networkService : NetworkService
     enum CharactersState { case loading, loaded([Character]), error(Error) }
     var onStateChange: ((CharactersState) -> Void)?
-    private(set) var characters: [Character] = []
+    var characters: [Character] = []
     
     init(networkService: NetworkService, onStateChange:  ((CharactersState) -> Void)?) {
         self.networkService = networkService
@@ -20,13 +21,12 @@ class RickAndMortyViewModel: RickAndMortyViewModelProtocol {
     }
     
     func fetchCharacters() {
-        let url = Endpoints.characters.url
         onStateChange?(.loading)
-        networkService.fetchData(from: url, list: [], iteration: 0) { result in
+        networkService.fetchAllCharacters { result in
             switch result {
-            case .success(let data):
-                self.characters = data
-                self.onStateChange?(.loaded(data))
+            case .success(let characters):
+                self.characters = characters
+                self.onStateChange?(.loaded(characters))
             case .failure(let error):
                 print("Error fetching characters: \(error)")
                 self.onStateChange?(.error(error))

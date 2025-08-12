@@ -12,30 +12,28 @@ class MainViewController: UIViewController {
     var viewModel: RickAndMortyViewModelProtocol
 
     var characters: [Character] = []
-    private var splashView: MainScreenView?
     
     // MARK: - UI Components
     private let gradientBackground = GradientBackgroundView()
     private let charactersTableView = CharactersTableView()
-    private let loadingView = LoadingView()
 
     init(viewModel: RickAndMortyViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
-
-        // Bind state changes
+        
+        // Load characters from viewModel (already fetched in splash)
+        self.characters = viewModel.characters
+        
+        // Bind state changes for future updates (like favorites)
         self.viewModel.onStateChange = { [weak self] state in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 switch state {
-                case .loading:
-                    self.loadingView.startLoading()
                 case .loaded(let characters):
-                    self.loadingView.stopLoading()
                     self.characters = characters
                     self.charactersTableView.reloadData()
-                case .error:
-                    self.loadingView.stopLoading()
+                case .loading, .error:
+                    break
                 }
             }
         }
@@ -48,6 +46,7 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        showTableView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -61,8 +60,6 @@ class MainViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = AppColor.background
         addGradientBackground()
-        addLoadingView()
-        showSplash()
     }
 
     private func addGradientBackground() {
@@ -76,22 +73,7 @@ class MainViewController: UIViewController {
         ])
     }
 
-    private func addLoadingView() {
-        view.addSubview(loadingView)
-        loadingView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            loadingView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loadingView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-    }
 
-    private func hideNavigationBar() {
-        navigationController?.setNavigationBarHidden(true, animated: false)
-    }
-    
-    private func showNavigationBar() {
-        navigationController?.setNavigationBarHidden(false, animated: false)
-    }
     
     private func configureTableView() {
         charactersTableView.configureDataSource(self)
@@ -99,29 +81,9 @@ class MainViewController: UIViewController {
     }
     
     private func showTableView() {
-        showNavigationBar()
         view.addSubview(charactersTableView)
         configureTableView()
         setupTableViewConstraints()
-    }
-
-    private func showSplash() {
-        hideNavigationBar()
-        let splash = MainScreenView()
-        splash.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(splash)
-        setupSplashConstraints(splash)
-        self.splashView = splash
-        viewModel.fetchCharacters()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            UIView.animate(withDuration: 0.8) {
-                self.splashView?.alpha = 0
-            } completion: { _ in
-                self.splashView?.removeFromSuperview()
-                self.splashView = nil
-                self.showTableView()
-            }
-        }
     }
 
     // MARK: - Constraints
@@ -133,17 +95,7 @@ class MainViewController: UIViewController {
             charactersTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
     }
-
-    private func setupSplashConstraints(_ splash: UIView) {
-        NSLayoutConstraint.activate([
-            splash.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            splash.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            splash.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.7),
-            splash.heightAnchor.constraint(equalTo: splash.widthAnchor)
-        ])
-    }
 }
-
 
 // MARK: - UITableViewDataSource
 extension MainViewController: UITableViewDataSource {
@@ -174,6 +126,7 @@ extension MainViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         let character = characters[indexPath.row]
         
+
         let detailVC = CharacterDetailViewController(character: character)
         UIView.performWithoutAnimation {
             navigationController?.pushViewController(detailVC, animated: false)
