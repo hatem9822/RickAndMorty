@@ -14,7 +14,7 @@ class CharacterCell: UITableViewCell {
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
         imageView.layer.borderWidth = 1
-        imageView.layer.borderColor = UIColor.systemGray3.cgColor
+        imageView.layer.borderColor = AppColor.border.cgColor
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -23,7 +23,7 @@ class CharacterCell: UITableViewCell {
         let label = UILabel()
         label.font = .preferredFont(forTextStyle: .headline)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .white
+        label.textColor = AppColor.textPrimary
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -32,7 +32,7 @@ class CharacterCell: UITableViewCell {
         let label = UILabel()
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .secondaryLabel
+        label.textColor = AppColor.textSecondary
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -53,7 +53,7 @@ class CharacterCell: UITableViewCell {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+        view.backgroundColor = AppColor.cardBackground
         view.layer.cornerRadius = 16
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -61,6 +61,7 @@ class CharacterCell: UITableViewCell {
 
     private var currentCharacterId: Int32?
     private var isFavorite = false
+    var onToggleFavorite: ((Int32) -> Void)?
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -86,13 +87,12 @@ class CharacterCell: UITableViewCell {
         // Add subviews to contentView
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowColor = AppColor.background.cgColor
         layer.shadowOpacity = 0.25
         layer.shadowOffset = CGSize(width: 0, height: 4)
         layer.shadowRadius = 8
         layer.masksToBounds = false
-        let selectedBG = UIView()
-        selectedBG.backgroundColor = UIColor.systemGray.withAlphaComponent(0.15)
+        let selectedBG = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
         selectedBackgroundView = selectedBG
         selectionStyle = .default
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(toggleFavorite))
@@ -127,13 +127,13 @@ class CharacterCell: UITableViewCell {
         switch character.status {
         case .alive:
             statusLabel.text = "Alive"
-            statusColor = .systemGreen
+            statusColor = AppColor.success
         case .dead:
             statusLabel.text = "Dead"
-            statusColor = .systemRed
+            statusColor = AppColor.danger
         case .unknown:
             statusLabel.text = "Unknown"
-            statusColor = .tertiaryLabel
+            statusColor = AppColor.neutral
         }
 
         statusDot.backgroundColor = statusColor
@@ -207,27 +207,19 @@ class CharacterCell: UITableViewCell {
 
     @objc func toggleFavorite() {
         guard let id = currentCharacterId else { return }
-        do {
-            if isFavorite {
-                try CoreDataService.shared.removeFavourite(id: id)
-                isFavorite = false
-            } else {
-                _ = try CoreDataService.shared.addFavourite(id: id)
-                isFavorite = true
-            }
-            updateFavouriteUI()
-        } catch {
-            print("Favourite toggle failed: \(error)")
-        }
+        onToggleFavorite?(id)
+        isFavorite.toggle()
+        updateFavouriteUI()
+        
     }
 
     private func updateFavouriteUI() {
         if isFavorite {
             favoriteImageView.image = UIImage(systemName: "star.fill")
-            favoriteImageView.tintColor = .systemYellow
+            favoriteImageView.tintColor = AppColor.favoriteActive
         } else {
             favoriteImageView.image = UIImage(systemName: "star")
-            favoriteImageView.tintColor = .tertiaryLabel
+            favoriteImageView.tintColor = AppColor.iconMuted
         }
     }
     

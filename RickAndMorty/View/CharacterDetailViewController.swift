@@ -8,218 +8,239 @@
 import UIKit
 
 class CharacterDetailViewController: UIViewController {
-    
     private let character: Character
-    
-    private let characterImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 16
-        imageView.layer.borderWidth = 1
-        imageView.layer.borderColor = UIColor.quaternaryLabel.cgColor
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
-    private let nameLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .white
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let statusLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .footnote)
-        label.textAlignment = .center
-        label.textColor = .label
-        label.backgroundColor = .tertiarySystemFill
-        label.layer.cornerRadius = 10
-        label.clipsToBounds = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let speciesLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .subheadline)
-        label.textColor = .secondaryLabel
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    private var isFavorite: Bool = false
+    private let gradientBackground = GradientBackgroundView()
+
+    // MARK: - UI
+    private let scrollView: UIScrollView = {
+        let v = UIScrollView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.alwaysBounceVertical = true
+        return v
     }()
 
-    // Container card for info
-    private let containerView: UIView = {
+    private let contentView: UIView = {
         let v = UIView()
-        v.backgroundColor = .secondarySystemBackground
-        v.layer.cornerRadius = 16
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
 
-    // Additional info labels
-    private let typeLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .body)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    private let headerImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
     }()
 
-    private let genderLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .body)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    private let headerGradientLayer = CAGradientLayer()
+
+    private let nameLabel: UILabel = {
+        let l = UILabel()
+        l.font = AppTypography.titleLarge
+        l.textColor = AppColor.textPrimary
+        l.numberOfLines = 2
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
 
-    private let originLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .body)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    // MARK: - Components
+    private let chipsStack: UIStackView = {
+        let s = UIStackView()
+        s.axis = .horizontal
+        s.spacing = AppSpacing.small
+        s.alignment = .leading
+        s.distribution = .fillProportionally
+        s.translatesAutoresizingMaskIntoConstraints = false
+        return s
     }()
+    private let infoCard = InfoCardView()
 
-    private let locationLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .body)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private let episodesLabel: UILabel = {
-        let label = UILabel()
-        label.font = .preferredFont(forTextStyle: .body)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private let infoStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-    
+    // MARK: - Init
     init(character: Character) {
         self.character = character
         super.init(nibName: nil, bundle: nil)
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        configureWithCharacter()
-    }
-    
-    private func setupUI() {
-        view.backgroundColor = .systemBackground
-        
-        view.addSubview(characterImageView)
-        view.addSubview(nameLabel)
-        view.addSubview(statusLabel)
-        view.addSubview(speciesLabel)
-        view.addSubview(containerView)
-        containerView.addSubview(infoStackView)
-
-        // Add info labels to stack
-        infoStackView.addArrangedSubview(typeLabel)
-        infoStackView.addArrangedSubview(genderLabel)
-        infoStackView.addArrangedSubview(originLabel)
-        infoStackView.addArrangedSubview(locationLabel)
-        infoStackView.addArrangedSubview(episodesLabel)
-        
-        setupConstraints()
-    }
-    
-    private func setupConstraints() {
+        view.backgroundColor = AppColor.background
+        // Gradient background view
+        view.addSubview(gradientBackground)
+        gradientBackground.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            characterImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            characterImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            characterImageView.widthAnchor.constraint(equalToConstant: 200),
-            characterImageView.heightAnchor.constraint(equalToConstant: 200),
-            
-            nameLabel.topAnchor.constraint(equalTo: characterImageView.bottomAnchor, constant: 20),
-            nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            nameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            statusLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
-            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            speciesLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 10),
-            speciesLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            speciesLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            gradientBackground.topAnchor.constraint(equalTo: view.topAnchor),
+            gradientBackground.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradientBackground.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            gradientBackground.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        navigationItem.largeTitleDisplayMode = .never
+        setupFavoriteButton()
+        setupLayout()
+        configure()
+        loadHeaderImage()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        headerGradientLayer.frame = headerImageView.bounds
+    }
+
+    // MARK: - Setup
+    private func setupLayout() {
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+
+        contentView.addSubview(headerImageView)
+        headerImageView.layer.addSublayer(headerGradientLayer)
+        contentView.addSubview(nameLabel)
+        contentView.addSubview(chipsStack)
+        contentView.addSubview(infoCard)
+
+        // Important: disable autoresizing mask for custom views used with constraints
+        infoCard.translatesAutoresizingMaskIntoConstraints = false
+
+        headerGradientLayer.colors = [UIColor.clear.cgColor, AppColor.overlayDark.cgColor]
+        headerGradientLayer.locations = [0.5, 1.0]
 
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: speciesLabel.bottomAnchor, constant: 20),
-            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            infoStackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16),
-            infoStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            infoStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
-            infoStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16)
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+
+            headerImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            headerImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            headerImageView.heightAnchor.constraint(equalTo: headerImageView.widthAnchor, multiplier: 0.6),
+
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: AppSpacing.medium),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -AppSpacing.medium),
+            nameLabel.bottomAnchor.constraint(equalTo: headerImageView.bottomAnchor, constant: -AppSpacing.medium),
+
+            chipsStack.topAnchor.constraint(equalTo: headerImageView.bottomAnchor, constant: AppSpacing.medium),
+            chipsStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: AppSpacing.medium),
+            chipsStack.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -AppSpacing.medium),
+
+            infoCard.topAnchor.constraint(equalTo: chipsStack.bottomAnchor, constant: AppSpacing.medium),
+            infoCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: AppSpacing.medium),
+            infoCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -AppSpacing.medium),
+            infoCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -AppSpacing.large)
         ])
     }
-    
-    private func configureWithCharacter() {
+
+    private func setupFavoriteButton() {
+        do {
+            isFavorite = try CoreDataService.shared.isFavourite(id: Int32(character.id))
+        } catch {
+            isFavorite = false
+        }
+        updateFavoriteButton()
+    }
+
+    private func updateFavoriteButton() {
+        let imageName = isFavorite ? "star.fill" : "star"
+        let item = UIBarButtonItem(image: UIImage(systemName: imageName), style: .plain, target: self, action: #selector(toggleFavorite))
+        item.tintColor = isFavorite ? AppColor.favoriteActive : AppColor.textSecondary
+        navigationItem.rightBarButtonItem = item
+    }
+
+    // MARK: - Configure
+    private func configure() {
         nameLabel.text = character.name
-        speciesLabel.text = character.species
-        
-        switch character.status {
-        case .alive:
-            statusLabel.text = "  Alive  "
-        case .dead:
-            statusLabel.text = "  Dead  "
-        case .unknown:
-            statusLabel.text = "  Unknown  "
-        }
-        
-        // Load character image
-        Task {
-            await loadImage(from: character.image)
-        }
 
-        // Additional info
-        let typeText = character.type.isEmpty ? "-" : character.type
-        typeLabel.text = "Type: \(typeText)"
-        genderLabel.text = "Gender: \(character.gender.rawValue)"
-        originLabel.text = "Origin: \(character.origin.name)"
-        locationLabel.text = "Location: \(character.location.name)"
-        episodesLabel.text = "Episodes: \(character.episode.count)"
+        // Chips
+        chipsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        chipsStack.addArrangedSubview(makeChip(text: character.status.rawValue, tint: statusColor(for: character.status)))
+        if !character.type.isEmpty {
+            chipsStack.addArrangedSubview(makeChip(text: character.type, tint: AppColor.accent))
+        }
+        chipsStack.addArrangedSubview(makeChip(text: character.gender.rawValue, tint: AppColor.iconSecondary))
+
+        // Info card
+        let infoItems = [
+            InfoItem(iconName: "leaf.fill", text: "Species: \(character.species)"),
+            InfoItem(iconName: "mappin.circle.fill", text: "Origin: \(character.origin.name)"),
+            InfoItem(iconName: "location.fill", text: "Location: \(character.location.name)"),
+            InfoItem(iconName: "film.fill", text: "Episodes: \(character.episode.count)")
+        ]
+        infoCard.configure(with: infoItems)
     }
-    
+
+    private func loadHeaderImage() {
+        Task { await loadImage(from: character.image) }
+    }
+
     private func loadImage(from urlString: String) async {
         guard let url = URL(string: urlString) else { return }
-        
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             await MainActor.run {
-                characterImageView.image = UIImage(data: data)
+                self.headerImageView.image = UIImage(data: data)
             }
         } catch {
             print("Failed to load image: \(error)")
         }
     }
 
-} 
+    // MARK: - Actions
+    @objc private func toggleFavorite() {
+        do {
+            let id = Int32(character.id)
+            if isFavorite {
+                try CoreDataService.shared.removeFavourite(id: id)
+                isFavorite = false
+            } else {
+                _ = try CoreDataService.shared.addFavourite(id: id)
+                isFavorite = true
+            }
+            updateFavoriteButton()
+        } catch {
+            print("Failed to toggle favourite: \(error)")
+        }
+    }
+
+    // MARK: - Helpers
+    private func statusColor(for status: Status) -> UIColor {
+        switch status {
+        case .alive: return AppColor.success
+        case .dead: return AppColor.danger
+        case .unknown: return AppColor.neutral
+        }
+    }
+
+    private func makeChip(text: String, tint: UIColor) -> UIView {
+        let container = UIView()
+        container.backgroundColor = tint.withAlphaComponent(0.2)
+        container.layer.cornerRadius = 12
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = text
+        label.font = AppTypography.chip
+        label.textColor = AppColor.textPrimary
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 6),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -6),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10)
+        ])
+
+        return container
+    }
+}
+
+

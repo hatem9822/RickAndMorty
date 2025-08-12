@@ -1,24 +1,26 @@
 
 import Foundation
 
-  protocol RickAndMortyViewModelProtocol {
+protocol RickAndMortyViewModelProtocol:AnyObject {
       func fetchCharacters()
+      func getFavouriteCharacters() -> [Character]
       var onStateChange: ((RickAndMortyViewModel.CharactersState) -> Void)? { get set }
+      func toggleFavourite(_ characterID: Int32)
   }
 
-class RickAndMortyViewModel {
+class RickAndMortyViewModel: RickAndMortyViewModelProtocol {
     private let networkService : NetworkService
     enum CharactersState { case loading, loaded([Character]), error(Error) }
     var onStateChange: ((CharactersState) -> Void)?
     private(set) var characters: [Character] = []
     
-    init(onStateChange:  ((CharactersState) -> Void)?) {
-        self.networkService = NetworkService()
+    init(networkService: NetworkService, onStateChange:  ((CharactersState) -> Void)?) {
+        self.networkService = networkService
         self.onStateChange = onStateChange
     }
     
     func fetchCharacters() {
-        let url = URL(string: "https://rickandmortyapi.com/api/character")!
+        let url = Endpoints.characters.url
         onStateChange?(.loading)
         networkService.fetchData(from: url, list: [], iteration: 0) { result in
             switch result {
@@ -41,5 +43,19 @@ class RickAndMortyViewModel {
         } catch {
             return []
         }
+    }
+    
+    func toggleFavourite(_ characterID: Int32) {
+        do {
+            if try CoreDataService.shared.isFavourite(id: characterID) {
+                try CoreDataService.shared.removeFavourite(id: characterID)
+            }
+            else {
+                try CoreDataService.shared.addFavourite(id: characterID)
+            }
+        } catch {
+            print(error)
+        }
+        
     }
 }

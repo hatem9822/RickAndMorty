@@ -11,13 +11,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
         
-        let viewModel = RickAndMortyViewModel(onStateChange: nil)
-        let viewController = ViewController(viewModel: viewModel)
+        let viewModel = RickAndMortyViewModel(networkService: NetworkService(), onStateChange: nil)
+        let viewController = MainViewController(viewModel: viewModel)
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), selectedImage: UIImage(systemName: "house.fill"))
         
@@ -28,32 +27,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let tabBarController = UITabBarController()
         tabBarController.viewControllers = [navigationController, favouriteNavController]
 
-        // Make the tab bar opaque so it doesn't overlay scroll views
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-        tabBarController.tabBar.standardAppearance = tabBarAppearance
-        tabBarController.tabBar.scrollEdgeAppearance = tabBarAppearance
-        tabBarController.tabBar.isTranslucent = false
-
-        // Apply consistent dark, opaque navigation bar to avoid white flash on transitions
-        let navAppearance = UINavigationBarAppearance()
-        navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-        navAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-
-        [navigationController, favouriteNavController].forEach { nav in
-            nav.navigationBar.standardAppearance = navAppearance
-            nav.navigationBar.scrollEdgeAppearance = navAppearance
-            nav.navigationBar.compactAppearance = navAppearance
-            nav.navigationBar.isTranslucent = false
-            nav.view.backgroundColor = .black
-        }
-
+        // Configure tab bar appearance
+        configureTabBar(tabBarController)
+        
+        // Configure navigation bars using the component
+        NavigationBarConfigurator.configure(navigationController, title: "All Characters", prefersLargeTitles: false)
+        NavigationBarConfigurator.configure(favouriteNavController, title: "Favourites", prefersLargeTitles: false)
 
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
+        window?.tintColor = AppColor.accent
+    }
+    
+    private func configureTabBar(_ tabBarController: UITabBarController) {
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = AppColor.surface
+        tabBarAppearance.shadowColor = .clear
+        tabBarController.tabBar.standardAppearance = tabBarAppearance
+        tabBarController.tabBar.scrollEdgeAppearance = tabBarAppearance
+        tabBarController.tabBar.isTranslucent = false
+        tabBarController.tabBar.tintColor = AppColor.accent
+        tabBarController.tabBar.unselectedItemTintColor = AppColor.textSecondary
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -86,7 +81,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Save changes in the application's managed object context when the application transitions to the background.
         (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
-
-
 }
 

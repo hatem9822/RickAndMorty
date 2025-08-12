@@ -8,46 +8,52 @@
 import UIKit
 
 final class FavouriteViewController: UIViewController {
-    private let viewModel: RickAndMortyViewModel
+    private let viewModel: RickAndMortyViewModelProtocol
     private var characters: [Character] = []
+    
+    // MARK: - UI Components
+    private let gradientBackground = GradientBackgroundView()
+    private let charactersTableView = CharactersTableView()
 
-    init(viewModel: RickAndMortyViewModel) {
+    init(viewModel: RickAndMortyViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    private lazy var tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.register(CharacterCell.self, forCellReuseIdentifier: "characterCell")
-        tableView.backgroundColor = .black
-        tableView.separatorStyle = .none
-        tableView.showsVerticalScrollIndicator = false
-        tableView.contentInset = UIEdgeInsets(top: 24, left: 0, bottom: 24, right: 0)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.dataSource = self
-        tableView.delegate = self
-        return tableView
-    }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Favourites"
-        view.backgroundColor = .black
-        view.addSubview(tableView)
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
+        charactersTableView.configureDataSource(self)
+        charactersTableView.configureDelegate(self)
+        setupUI()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         characters = viewModel.getFavouriteCharacters()
-        tableView.reloadData()
+        charactersTableView.reloadData()
+    }
+    
+    func setupConstrains(){
+        NSLayoutConstraint.activate([
+            gradientBackground.topAnchor.constraint(equalTo: view.topAnchor),
+            gradientBackground.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradientBackground.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            gradientBackground.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            charactersTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            charactersTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            charactersTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            charactersTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+    }
+    func setupUI(){
+        title = "Favourites"
+        view.backgroundColor = AppColor.background
+        view.addSubview(gradientBackground)
+        gradientBackground.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(charactersTableView)
+        setupConstrains()
     }
 }
 
@@ -56,7 +62,15 @@ extension FavouriteViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "characterCell", for: indexPath) as! CharacterCell
-        cell.configure(with: characters[indexPath.row])
+        let character = characters[indexPath.row]
+        
+        cell.onToggleFavorite = { [weak self] id in
+            guard let self = self else { return }
+            self.viewModel.toggleFavourite(id)
+            tableView.reloadRows(at: [indexPath], with: UITableView.RowAnimation.none)
+        }
+        
+        cell.configure(with: character)
         return cell
     }
 
