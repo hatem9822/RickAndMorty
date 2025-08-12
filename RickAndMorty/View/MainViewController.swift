@@ -174,7 +174,6 @@ extension MainViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         let character = characters[indexPath.row]
         
-        // Create detail view controller (you'll need to create this)
         let detailVC = CharacterDetailViewController(character: character)
         UIView.performWithoutAnimation {
             navigationController?.pushViewController(detailVC, animated: false)
