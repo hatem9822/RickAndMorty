@@ -10,12 +10,12 @@ protocol RickAndMortyViewModelProtocol:AnyObject {
   }
 
 class RickAndMortyViewModel: RickAndMortyViewModelProtocol {
-    private let networkService : NetworkService
+    private let networkService: NetworkProtocol
     enum CharactersState { case loading, loaded([Character]), error(Error) }
     var onStateChange: ((CharactersState) -> Void)?
     var characters: [Character] = []
     
-    init(networkService: NetworkService, onStateChange:  ((CharactersState) -> Void)?) {
+    init(networkService: NetworkProtocol, onStateChange:  ((CharactersState) -> Void)?) {
         self.networkService = networkService
         self.onStateChange = onStateChange
     }

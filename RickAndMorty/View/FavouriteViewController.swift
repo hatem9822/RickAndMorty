@@ -67,7 +67,8 @@ extension FavouriteViewController: UITableViewDataSource, UITableViewDelegate {
         cell.onToggleFavorite = { [weak self] id in
             guard let self = self else { return }
             self.viewModel.toggleFavourite(id)
-            tableView.reloadRows(at: [indexPath], with: UITableView.RowAnimation.none)
+            self.characters.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
         }
         
         cell.configure(with: character)
