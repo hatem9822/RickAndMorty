@@ -124,32 +124,17 @@ final class SplashViewController: UIViewController {
         favouriteNavController.tabBarItem = UITabBarItem(title: "Favourite", image: UIImage(systemName: "heart"), selectedImage: UIImage(systemName: "heart.fill"))
 
         // Create TabBarController
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [navigationController, favouriteNavController]
-
-        // Configure tab bar appearance (same as SceneDelegate)
-        configureTabBar(tabBarController)
+        let tabBarController = CustomTabBarController(viewControllers: [navigationController, favouriteNavController])
+        
         
         // Configure navigation bars using the component (same as SceneDelegate)
         NavigationBarConfigurator.configure(navigationController, title: "All Characters", prefersLargeTitles: false)
         NavigationBarConfigurator.configure(favouriteNavController, title: "Favourites", prefersLargeTitles: false)
 
-        // Replace root view controller
-        if let window = view.window {
-            window.rootViewController = tabBarController
-            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
-        }
+        // Present tab bar controller
+        tabBarController.modalPresentationStyle = .fullScreen
+        tabBarController.modalTransitionStyle = .crossDissolve
+        present(tabBarController, animated: true)
     }
     
-    private func configureTabBar(_ tabBarController: UITabBarController) {
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = AppColor.surface
-        tabBarAppearance.shadowColor = .clear
-        tabBarController.tabBar.standardAppearance = tabBarAppearance
-        tabBarController.tabBar.scrollEdgeAppearance = tabBarAppearance
-        tabBarController.tabBar.isTranslucent = false
-        tabBarController.tabBar.tintColor = AppColor.accent
-        tabBarController.tabBar.unselectedItemTintColor = AppColor.textSecondary
-    }
 }

@@ -29,11 +29,13 @@ class MainViewController: UIViewController {
             guard let self = self else { return }
             DispatchQueue.main.async {
                 switch state {
+                case .loading:
+                    break
                 case .loaded(let characters):
                     self.characters = characters
                     self.charactersTableView.reloadData()
-                case .loading, .error:
-                    break
+                case  .error(let error):
+                    print(error)
                 }
             }
         }
