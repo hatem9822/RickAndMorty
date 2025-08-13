@@ -17,9 +17,11 @@ enum Endpoints{
         case .characters:
             return "/character/"
         }
+
     }
     
     var url : URL{
         return URL(string: Self.baseURLString + path)!
     }
 }
+

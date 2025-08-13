@@ -15,40 +15,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
         
+        // Start with splash screen
         let viewModel = RickAndMortyViewModel(networkService: NetworkService(), onStateChange: nil)
-        let viewController = MainViewController(viewModel: viewModel)
-        let navigationController = UINavigationController(rootViewController: viewController)
-        navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), selectedImage: UIImage(systemName: "house.fill"))
+        let splashVC = SplashViewController(viewModel: viewModel)
         
-        let favouriteVC = FavouriteViewController(viewModel: viewModel)
-        let favouriteNavController = UINavigationController(rootViewController: favouriteVC)
-        favouriteNavController.tabBarItem = UITabBarItem(title: "Favourite", image: UIImage(systemName: "heart"), selectedImage: UIImage(systemName: "heart.fill"))
-
-        let tabBarController = UITabBarController()
-        tabBarController.viewControllers = [navigationController, favouriteNavController]
-
-        // Configure tab bar appearance
-        configureTabBar(tabBarController)
-        
-        // Configure navigation bars using the component
-        NavigationBarConfigurator.configure(navigationController, title: "All Characters", prefersLargeTitles: false)
-        NavigationBarConfigurator.configure(favouriteNavController, title: "Favourites", prefersLargeTitles: false)
-
-        window?.rootViewController = tabBarController
+        window?.rootViewController = splashVC
         window?.makeKeyAndVisible()
         window?.tintColor = AppColor.accent
-    }
-    
-    private func configureTabBar(_ tabBarController: UITabBarController) {
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = AppColor.surface
-        tabBarAppearance.shadowColor = .clear
-        tabBarController.tabBar.standardAppearance = tabBarAppearance
-        tabBarController.tabBar.scrollEdgeAppearance = tabBarAppearance
-        tabBarController.tabBar.isTranslucent = false
-        tabBarController.tabBar.tintColor = AppColor.accent
-        tabBarController.tabBar.unselectedItemTintColor = AppColor.textSecondary
     }
     
     func sceneDidDisconnect(_ scene: UIScene) {

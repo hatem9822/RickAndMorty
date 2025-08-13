@@ -68,17 +68,7 @@ class CharacterDetailViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.background
-        // Gradient background view
-        view.addSubview(gradientBackground)
-        gradientBackground.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            gradientBackground.topAnchor.constraint(equalTo: view.topAnchor),
-            gradientBackground.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gradientBackground.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            gradientBackground.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-        navigationItem.largeTitleDisplayMode = .never
+        setupBackground()
         setupFavoriteButton()
         setupLayout()
         configure()
@@ -91,6 +81,19 @@ class CharacterDetailViewController: UIViewController {
     }
 
     // MARK: - Setup
+    private func setupBackground() {
+        view.backgroundColor = AppColor.background
+        // Gradient background view
+        view.addSubview(gradientBackground)
+        gradientBackground.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            gradientBackground.topAnchor.constraint(equalTo: view.topAnchor),
+            gradientBackground.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradientBackground.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            gradientBackground.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+    }
     private func setupLayout() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -101,7 +104,6 @@ class CharacterDetailViewController: UIViewController {
         contentView.addSubview(chipsStack)
         contentView.addSubview(infoCard)
 
-        // Important: disable autoresizing mask for custom views used with constraints
         infoCard.translatesAutoresizingMaskIntoConstraints = false
 
         headerGradientLayer.colors = [UIColor.clear.cgColor, AppColor.overlayDark.cgColor]

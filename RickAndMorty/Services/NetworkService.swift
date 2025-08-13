@@ -7,43 +7,81 @@
 
 import Foundation
 
-protocol CharactersAPI {
-    func fetchCharacters(completion: @escaping (Result<[Character], Error>) -> Void)
-  }
-class NetworkService {
+protocol NetworkProtocol {
+    func request<T: Decodable>(_ endpoint: Endpoints,
+                               decodeTo type: T.Type,
+                               completion: @escaping (Result<T, Error>) -> Void)
+    func fetchAllCharacters(completion: @escaping (Result<[Character], Error>) -> Void)
+}
+
+class NetworkService: NetworkProtocol {
     
-    func fetchData(from url: URL,list: [Character],iteration: Int, completion: @escaping (Result<[Character], Error>) -> Void) {
-        URLSession.shared.dataTask(with: url) { data, response, error in
+    func request<T: Decodable>(
+        _ endpoint: Endpoints,
+        decodeTo type: T.Type,
+        completion: @escaping (Result<T, Error>) -> Void
+    ) {
+        URLSession.shared.dataTask(with: endpoint.url) { data, response, error in
+            // Handle URLSession error
             if let urlError = error as? URLError {
-                switch urlError.code {
-                case .badURL:
-                    completion (.failure(NetworkError.invalidURL))    
-                default:
-                    completion(.failure(NetworkError.urlSessionFailed(urlError)))
-                }
+                completion(.failure(NetworkError.urlSessionFailed(urlError)))
+                return
             }
+            
+            // No data case
             guard let data = data else {
                 completion(.failure(NetworkError.noData))
                 return
             }
             
+            // Decode
             do {
-                let decoded = try JSONDecoder().decode(RickAndMortyInfo.self, from: data)
-                let newList = list + decoded.results
-                if let nextPage = decoded.info.next {
-                    self.fetchData(from: URL(string: nextPage)!, list: newList,iteration: iteration + 1, completion: completion)
-                } else {
-                    completion(.success(newList))
-                }
+                let decoded = try JSONDecoder().decode(type, from: data)
+                completion(.success(decoded))
             } catch {
-                completion(.failure(NetworkError.decodingFailed("Decoding failed on iteration \(iteration): \(error.localizedDescription)")))
+                completion(.failure(NetworkError.decodingFailed(error.localizedDescription)))
             }
-        }.resume()
-    }
+            
+             }.resume()
+     }
+     
+     // Special method for paginated character fetching
+     func fetchAllCharacters(completion: @escaping (Result<[Character], Error>) -> Void) {
+         fetchAllCharacters(from: Endpoints.characters.url, allCharacters: [], completion: completion)
+     }
+     
+     private func fetchAllCharacters(from url: URL, allCharacters: [Character], completion: @escaping (Result<[Character], Error>) -> Void) {
+         URLSession.shared.dataTask(with: url) { data, response, error in
+             // Handle URLSession error
+             if let urlError = error as? URLError {
+                 completion(.failure(NetworkError.urlSessionFailed(urlError)))
+                 return
+             }
+             
+             // No data case
+             guard let data = data else {
+                 completion(.failure(NetworkError.noData))
+                 return
+             }
+             
+             // Decode
+             do {
+                 let decoded = try JSONDecoder().decode(RickAndMortyInfo.self, from: data)
+                 let newCharacters = allCharacters + decoded.results
+                 
+                 if let nextPage = decoded.info.next, let nextURL = URL(string: nextPage) {
+                     self.fetchAllCharacters(from: nextURL, allCharacters: newCharacters, completion: completion)
+                 } else {
+                     completion(.success(newCharacters))
+                 }
+             } catch {
+                 completion(.failure(NetworkError.decodingFailed(error.localizedDescription)))
+             }
+         }.resume()
+     }
 
-    
-    
-    enum NetworkError: Error {
+     
+     enum NetworkError: Error {
         case invalidURL
         case decodingFailed(String)
         case noData
